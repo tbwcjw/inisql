@@ -1,5 +1,5 @@
 # inisql
-query driven abstraction layer for managing ini files parsed using ConfigParser 
+sql inspired query driven abstraction layer for managing ini files parsed using ConfigParser 
 
 ## usage:
 
