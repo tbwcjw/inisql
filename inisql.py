@@ -7,6 +7,7 @@ class inisql:
         self.config = configparser.ConfigParser(*args, **kwargs)
         self.config.read(config_file)
         self.config_file = config_file
+        self.result = dict()
 
     def execute(self, query):
         tokens = query.split()
@@ -30,12 +31,35 @@ class inisql:
     def _select_query(self, tokens):
         if tokens[1] != '*' or tokens[2].upper() != 'FROM':
             raise ValueError("Invalid SELECT syntax")
-        
         section = tokens[3]
         if section not in self.config:
             raise ValueError(f"Section {section} not found")
         
-        return dict(self.config[section])
+        result = dict(self.config[section])
+
+        if 'WHERE' in tokens:
+            where_clause = ' '.join(tokens[tokens.index('WHERE')+1:])
+            conditions = self._parse_conditions(where_clause)
+            result = self._apply_conditions(result,conditions)
+
+        self.result = result
+        return True
+    
+    def _parse_conditions(self, where_clause):
+        conditions = where_clause.split('AND')
+        parsed_conditions = []
+        for condition in conditions:
+            key, value = condition.split("=")
+            parsed_conditions.append((key.strip(), value.strip()))
+        return parsed_conditions
+
+    def _apply_conditions(self, section_dict, conditions):
+        filtered_result = {}
+        for key, value in section_dict.items():
+            match = all(section_dict.get(cond_key) == cond_value for cond_key, cond_value in conditions)
+            if match:
+                filtered_result[key] = value
+        return filtered_result
     
     def _insert_query(self, tokens):
         if tokens[1].upper() != 'INTO':
@@ -52,6 +76,7 @@ class inisql:
             self.config[section][key.strip()] = value.strip()
         
         self._commit_changes()
+        return True
 
     def _update_query(self, tokens):
         if tokens[2].upper() != 'SET' or 'WHERE' not in tokens:
@@ -70,7 +95,8 @@ class inisql:
         if self.config[section].get(where_key.strip()) == where_value.strip():
             self.config[section][set_key.strip()] = set_value.strip()
             self._commit_changes()
-            #todo: handle race condition WHERE is not met
+            return True
+        return False
 
     def _delete_query(self, tokens):
         if tokens[1].upper() != 'FROM' or 'WHERE' not in tokens:
@@ -86,6 +112,8 @@ class inisql:
         if self.config[section].get(where_key.strip()) == where_value.strip():
             del self.config[section][where_key.strip()]
             self._commit_changes()
+            return True
+        return False
 
     def _drop_query(self, tokens):
         if tokens[1].upper() == 'SECTION':
@@ -103,10 +131,14 @@ class inisql:
                 raise ValueError(f"Option {option} not found in {section}")
             self.config.remove_option(section, option)
             self._commit_changes()
+            return True
+        return False
             
     def _commit_changes(self):
         with open(self.config_file, 'w') as configfile:
             self.config.write(configfile)
 
+sql = inisql('smb.conf', interpolation=None)
 
-    
+print(sql.execute("SELECT * FROM global"))
+print(sql.result)
