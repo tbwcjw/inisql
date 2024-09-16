@@ -108,4 +108,5 @@ class inisql:
         with open(self.config_file, 'w') as configfile:
             self.config.write(configfile)
 
+
     
