@@ -12,6 +12,7 @@ SELECT:
 > sql.execute("SELECT * FROM global WHERE key=value")
 > 
 > sql.execute("SELECT * FROM global WHERE key1=value1 AND key2=value2")
+> 
 > sql.execute("SELECT * FROM global WHERE ?=?", ['key1', 'value1']) << Note: bound parameter implementation is basic. does not verify types.
 
 INSERT:
