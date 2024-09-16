@@ -8,6 +8,8 @@ Initialization:
 
 SELECT:
 > sql.execute("SELECT * FROM global")
+> sql.execute("SELECT * FROM global WHERE key=value")
+> sql.execute("SELECT * FROM global WHERE key1=value1 AND key2=value2")
 
 INSERT:
 > sql.execute("INSERT INTO section (key=value)")
@@ -23,3 +25,6 @@ DROP (section):
 
 DROP (option):
 > sql.execute("DROP OPTION option FROM section")
+
+result:
+> print(sql.result)
