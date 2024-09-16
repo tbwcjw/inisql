@@ -7,14 +7,24 @@ class inisql:
         self.config = configparser.ConfigParser(*args, **kwargs)
         self.config.read(config_file)
         self.config_file = config_file
+        self.last_query= str()
         self.result = dict()
+        self.error = dict()
 
-    def execute(self, query):
+    def to_dict(self):
+        return {k: v for k, v in self.__dict__.items()}
+
+    def execute(self, query, params=None):
         tokens = query.split()
         if len(tokens) == 0:
-            raise ValueError("Empty query")
+            self.error = ValueError("Empty query")
+            return False
         
         command = tokens[0].upper() #query type
+
+        if params:
+            query = self._replace_placeholders(query, params)
+            tokens = query.split()
 
         verbs = {
             'SELECT': self._select_query(tokens),
@@ -25,15 +35,27 @@ class inisql:
         }
         
         if command not in verbs: 
-            raise ValueError(f"Unsupported operation: {command}")
+            self.error = ValueError(f"Unsupported operation: {command}")
+            return False
+        self.last_query = query
         return verbs[command]
+    
+    def _replace_placeholders(self, query, params):
+        placeholders = ['?', '%s']
+        for placeholder in placeholders:
+            if placeholder in query:
+                for param in params:
+                    query = query.replace(placeholder, str(param), 1)
+        return query
     
     def _select_query(self, tokens):
         if tokens[1] != '*' or tokens[2].upper() != 'FROM':
-            raise ValueError("Invalid SELECT syntax")
+            self.error = ValueError("Invalid SELECT syntax")
+            return False
         section = tokens[3]
         if section not in self.config:
-            raise ValueError(f"Section {section} not found")
+            self.error = ValueError(f"Section {section} not found")
+            return False
         
         result = dict(self.config[section])
 
@@ -63,7 +85,8 @@ class inisql:
     
     def _insert_query(self, tokens):
         if tokens[1].upper() != 'INTO':
-            raise ValueError("Invalid INSERT syntax")
+            self.error = ValueError("Invalid INSERT syntax")
+            return False
         
         section = tokens[2]
         key_values = ' '.join(tokens[3:]).strip("()").split(",")
@@ -80,14 +103,16 @@ class inisql:
 
     def _update_query(self, tokens):
         if tokens[2].upper() != 'SET' or 'WHERE' not in tokens:
-            raise ValueError("Invalid UPDATE syntax")
+            self.error =  ValueError("Invalid UPDATE syntax")
+            return False
         
         section = tokens[1]
         set_clause = ' '.join(tokens[3:tokens.index('WHERE')]).strip()
         where_clause = ' '.join(tokens[tokens.index('WHERE') + 1:]).strip()
 
         if section not in self.config:
-            raise ValueError(f"Section {section} not found")
+            self.error = ValueError(f"Section {section} not found")
+            return False
         
         set_key, set_value = set_clause.split("=")
         where_key, where_value = where_clause.split("=")
@@ -100,14 +125,16 @@ class inisql:
 
     def _delete_query(self, tokens):
         if tokens[1].upper() != 'FROM' or 'WHERE' not in tokens:
-            raise ValueError("Invalid DELETE syntax")
+            self.error = ValueError("Invalid DELETE syntax")
+            return False
         
         section = tokens[2]
         where_clause = ' '.join(tokens[tokens.index('WHERE') + 1:]).strip()
         where_key, where_value = where_clause.split("=")
 
         if section not in self.config:
-            raise ValueError(f"Section {section} not found")
+            self.error = ValueError(f"Section {section} not found")
+            return False
         
         if self.config[section].get(where_key.strip()) == where_value.strip():
             del self.config[section][where_key.strip()]
@@ -119,14 +146,16 @@ class inisql:
         if tokens[1].upper() == 'SECTION':
             section = tokens[2]
             if section not in self.config:
-                raise ValueError(f"Section {section} not found.")
+                self.error =  ValueError(f"Section {section} not found.")
+                return False
             self.config.remove_section(section)
             self._commit_changes()
         if tokens[1].upper() == 'OPTION':
             section = tokens[4]
             option = tokens[2]
             if section not in self.config:
-                raise ValueError(f"Section {section} not found")
+                self.error = ValueError(f"Section {section} not found")
+                return False
             if option not in self.config[section]:
                 raise ValueError(f"Option {option} not found in {section}")
             self.config.remove_option(section, option)
@@ -140,5 +169,5 @@ class inisql:
 
 sql = inisql('smb.conf', interpolation=None)
 
-print(sql.execute("SELECT * FROM global"))
-print(sql.result)
+print(sql.execute("SELECT * FROM global WHERE ?=?", ['server string', "Samba Server"]))
+print(sql.to_dict())
