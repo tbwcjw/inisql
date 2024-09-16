@@ -2,7 +2,7 @@ import configparser
 import re
 
 
-class inisqlparser:
+class inisql:
     def __init__(self, config_file, *args, **kwargs):
         self.config = configparser.ConfigParser(*args, **kwargs)
         self.config.read(config_file)
@@ -109,10 +109,3 @@ class inisqlparser:
             self.config.write(configfile)
 
     
-sql = inisqlparser('smb.conf', interpolation=None)
-
-#print(sql.execute("SELECT * FROM global"))
-#print(sql.execute("INSERT INTO user (key=value)"))
-#print(sql.execute("UPDATE user SET key=newValue WHERE key=value"))
-#print(sql.execute("DELETE FROM user WHERE key=newValue"))
-#print(sql.execute("DROP SECTION user"))
