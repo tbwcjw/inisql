@@ -32,3 +32,9 @@ DROP (option):
 
 result:
 > print(sql.result)
+
+errors:
+> print(sql.error)
+
+dictionary:
+> print(sql)

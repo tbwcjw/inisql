@@ -21,17 +21,16 @@ class inisql:
             return False
         
         command = tokens[0].upper() #query type
-
         if params:
             query = self._replace_placeholders(query, params)
             tokens = query.split()
 
         verbs = {
             'SELECT': self._select_query(tokens),
-            'INSERT': self._select_query(tokens),
-            'UPDATE': self._select_query(tokens),
-            'DELETE': self._select_query(tokens),
-            'DROP': self._select_query(tokens),
+            'INSERT': self._insert_query(tokens),
+            'UPDATE': self._update_query(tokens),
+            'DELETE': self._delete_query(tokens),
+            'DROP': self._drop_query(tokens),
         }
         
         if command not in verbs: 
@@ -169,5 +168,5 @@ class inisql:
 
 sql = inisql('smb.conf', interpolation=None)
 
-print(sql.execute("SELECT * FROM global WHERE ?=?", ['server string', "Samba Server"]))
+print(sql.execute("INSERT INTO global (?=?)", ['server string', "Samba Server"]))
 print(sql.to_dict())
