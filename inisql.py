@@ -203,5 +203,5 @@ class inisql:
 
 sql = inisql('smb.conf', interpolation=None)
 
-print(sql.execute("SELECT key,key FROM section"))
+print(sql.execute("SELECT %s,%s FROM global", ['fuck', 'workgroup']))
 print(sql.to_dict())

@@ -6,14 +6,25 @@ sql inspired query driven abstraction layer for managing ini files parsed using 
 Initialization:
 > inisql('file.ini', interpolation=None)
 
+prepared statements:
+| placeholder | type | description | example |
+|-------------|------|-------------|---------|
+| %s | string | accepts string only | SELECT * FROM section WHERE key=%s |
+| %i | integer | accepts integers only | SELECT * FROM section WHERE key=%i |
+| %f | float | accepts floats only | SELECT * FROM section WHERE key=%f |
+| %b | boolean | accepts boolean only | SELECT * FROM section WHERE key=%b |
+| ? | None/Any | accepts NoneType or any type | SELECT * FROM section WHERE key=? |
+
 SELECT:
-> sql.execute("SELECT * FROM global")
+> sql.execute("SELECT * FROM section")
 > 
-> sql.execute("SELECT * FROM global WHERE key=value")
+> sql.execute("SELECT * FROM section WHERE key=value")
 > 
-> sql.execute("SELECT * FROM global WHERE key1=value1 AND key2=value2")
+> sql.execute("SELECT * FROM section WHERE key1=value1 AND key2=value2")
 > 
-> sql.execute("SELECT * FROM global WHERE ?=?", ['key1', 'value1']) << Note: bound parameter implementation is basic. does not verify types.
+> sql.execute("SELECT * FROM section WHERE ?=?", ['key1', 'value1']) << Note: bound parameter implementation is basic. does not verify types.
+>
+> sql.execute("SELECT key1,key2 FROM section")
 
 INSERT:
 > sql.execute("INSERT INTO section (key=value)")
