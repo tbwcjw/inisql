@@ -1,2 +1,5 @@
 
 smb.conf
+__pycache__/inisql_controller.cpython-310.pyc
+__pycache__/inisql_model.cpython-310.pyc
+__pycache__/inisql_view.cpython-310.pyc
