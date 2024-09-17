@@ -4,7 +4,7 @@ sql inspired query driven abstraction layer for managing ini files parsed using 
 ## usage:
 
 Initialization:
-> inisql('file.ini', interpolation=None)
+> sql.inisql('file.ini', interpolation=None)
 
 prepared statements:
 | placeholder | type | description | example |
@@ -22,7 +22,7 @@ SELECT:
 > 
 > sql.execute("SELECT * FROM section WHERE key1=value1 AND key2=value2")
 > 
-> sql.execute("SELECT * FROM section WHERE ?=?", ['key1', 'value1']) << Note: bound parameter implementation is basic. does not verify types.
+> sql.execute("SELECT * FROM section WHERE %s=%i", ['key1', 1]) 
 >
 > sql.execute("SELECT key1,key2 FROM section")
 

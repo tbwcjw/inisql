@@ -1,6 +1,4 @@
 import configparser
-import re
-
 
 class inisql:
     def __init__(self, config_file, *args, **kwargs):
@@ -13,8 +11,9 @@ class inisql:
 
     def to_dict(self):
         return {k: v for k, v in self.__dict__.items()}                             #output inisql to dictionary
-
+ 
     def execute(self, query, params=None):
+        self.error = None #clear previous errors
         tokens = query.split()
         if len(tokens) == 0:
             self.error = ValueError("Empty query")                                  
@@ -26,11 +25,11 @@ class inisql:
             tokens = query.split()
 
         verbs = {                                                                   #trying to implement as many SQL language operations
-            'SELECT': self._select_query(tokens),
-            'INSERT': self._insert_query(tokens),
-            'UPDATE': self._update_query(tokens),
-            'DELETE': self._delete_query(tokens),
-            'DROP': self._drop_query(tokens),
+            'SELECT': self._select_query,
+            'INSERT': self._insert_query,
+            'UPDATE': self._update_query,
+            'DELETE': self._delete_query,
+            'DROP': self._drop_query,
         }
         
         if command not in verbs: 
@@ -38,7 +37,7 @@ class inisql:
             return False
         
         self.last_query = query
-        return verbs[command]
+        return verbs[command](tokens)
     
     def _replace_placeholders(self, query, params):                                 #bind parameters placeholder types
         type_placeholders = {
@@ -74,18 +73,23 @@ class inisql:
         return query
     
     def _select_query(self, tokens):                                                #SELECT operation
-        if tokens[2].upper() != 'FROM': 
+        if len(tokens) < 4 or tokens[2].upper() != 'FROM': 
             self.error = ValueError("Invalid SELECT syntax")
             return False
         
         keys = tokens[1].split(",") if tokens[1] != '*' else None                   #TODO: make this work with spaces (key, key)
-        section = tokens[3]                                                         #currently only works without (key,key)
 
+        section = tokens[3]                                                         #currently only works without (key,key)
         if section not in self.config:
             self.error = ValueError(f"Section {section} not found")
             return False
         
         result = dict(self.config[section])
+
+        if 'WHERE' in tokens:
+            where_clause = ' '.join(tokens[tokens.index('WHERE')+1:])
+            conditions = self._parse_conditions(where_clause)
+            result = self._apply_conditions(result,conditions)
 
         if keys:
             result = {key: result[key] for key in keys if key in result}            #key if not key if key key if key not key key key not if in key key key
@@ -93,11 +97,7 @@ class inisql:
             if missing_keys:
                 self.error = ValueError(f"Keys not found {','.join(missing_keys)}") #keys not present in dictionary, error
                 return False
-        if 'WHERE' in tokens:
-            where_clause = ' '.join(tokens[tokens.index('WHERE')+1:])
-            conditions = self._parse_conditions(where_clause)
-            result = self._apply_conditions(result,conditions)
-
+        
         self.result = result
         return True
     
@@ -203,5 +203,5 @@ class inisql:
 
 sql = inisql('smb.conf', interpolation=None)
 
-print(sql.execute("SELECT %s,%s FROM global", ['fuck', 'workgroup']))
+print(sql.execute("UPDATE global SET server string=Samba Server WHERE workgroup=WORKGROUP"))
 print(sql.to_dict())
