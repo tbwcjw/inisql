@@ -1,5 +1,11 @@
 # inisql
 sql inspired query driven abstraction layer for managing ini files parsed using ConfigParser 
+## roadmap:
+
+1. tokenization: proper tokenization of the syntax
+2. ast parsing: use nodes to represent queries 
+3. ast execution: query type identification through ast nodes
+4. error handling: centralized standardized sql-alike error handling 
 
 ## usage:
 
@@ -16,7 +22,7 @@ prepared statements:
 | ? | None/Any | accepts NoneType or any type | SELECT * FROM section WHERE key=? |
 
 SELECT:
-> sql.execute("SELECT * FROM section")
+> sql.execute("SELECT * FROM section") 
 > 
 > sql.execute("SELECT * FROM section WHERE key=value")
 > 

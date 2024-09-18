@@ -203,5 +203,5 @@ class inisql:
 
 sql = inisql('smb.conf', interpolation=None)
 
-print(sql.execute("UPDATE global SET server string=Samba Server WHERE workgroup=WORKGROUP"))
+print(sql.execute("SELECT * FROM global"))
 print(sql.to_dict())
